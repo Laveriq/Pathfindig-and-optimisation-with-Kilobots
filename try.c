@@ -124,7 +124,73 @@ void loop() {
     }
 }
 
-    /**/
+void message_rx(message_t *m, distance_measurement_t *d) {
+    mydata->new_message = 1;
+    mydata->dist = *d;
+} 
+void setup_message(void)
+{
+  mydata->transmit_msg.type = NORMAL;
+  mydata->transmit_msg.data[0] = kilo_uid & 0xff; //low byte of ID, currently not really used for anything
+  
+  //finally, calculate a message check sum
+  mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
+}
+void setup() {
+
+    mydata->kilobot_state = KILOBOT_NORMAL;
+    mydata->cur_distance = 0;
+    mydata->new_message = 0;
+
+  setup_message();
+
+  if (kilo_uid == 0)
+    set_color(RGB(0,0,3)); // color of the stationary bot
+  if (kilo_uid == 100)
+    set_color(RGB(3,0,0)); // color for food destination
+  else
+    set_color(RGB(0,3,0)); // color of the moving bot
+}
+
+#ifdef SIMULATOR // シミュレータ上に情報を表示させるときに使用する
+/* provide a text string for the simulator status bar about this bot */
+static char botinfo_buffer[10000];
+char *cb_botinfo(void)
+{
+  char *p = botinfo_buffer;
+  p += sprintf (p, "ID: %d \n", kilo_uid);
+  if (mydata->kilobot_state == KILOBOT_NORMAL)
+    p += sprintf (p, "State: KILOBOT_NORMAL\n");
+  if (mydata->kilobot_state == KILOBOT_TOOCLOSE)
+    p += sprintf (p, "State: KILOBOT_TOOCLOSE\n");
+  
+  return botinfo_buffer;
+}
+#endif
+
+
+int main() {
+    kilo_init(); //ハードウェアでkilobotを動かすときに使用する
+    kilo_message_rx = message_rx; //メッセージを受信したときに実行されるCallBack関数
+
+	// カーソルでフォーカスしているロボット(bot)の情報をシミュレーターに表示させる
+	// manual.mdの75行目
+    SET_CALLBACK(botinfo, cb_botinfo);
+    
+    // bot 0 is stationary and transmits messages. Other bots orbit around it.
+    if (kilo_uid == 0)
+      kilo_message_tx = message_tx; // メッセージを送信しようとした時に実行されるCallBack関数
+    
+    kilo_start(setup, loop);
+
+    return 0;
+}
+    /*
+    
+    
+    
+    
+    
 
 // 軌道運動が正常のときに使用する関数
 void orbit_normal() 
@@ -212,7 +278,7 @@ void setup()
 
 
 #ifdef SIMULATOR // シミュレータ上に情報を表示させるときに使用する
-/* provide a text string for the simulator status bar about this bot */
+// provide a text string for the simulator status bar about this bot 
 static char botinfo_buffer[10000];
 char *cb_botinfo(void)
 {
@@ -244,4 +310,4 @@ int main() {
 
     return 0;
 }
-
+*/ 
