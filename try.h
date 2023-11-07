@@ -13,15 +13,15 @@ typedef enum {
 
 // declare state variable type
 typedef enum {
-    ORBIT_TOOCLOSE,
-    ORBIT_NORMAL,
-} orbit_state_t;
+    pass_TOOCLOSE,
+    pass_NORMAL,
+} pass_state_t;
 
 // declare variables
 
 typedef struct 
 {
-  orbit_state_t orbit_state; // self declare
+  pass_state_t pass_state; // self declare
   uint8_t cur_distance;
   uint8_t new_message;
   distance_measurement_t dist; // kilolib.h 
