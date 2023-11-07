@@ -4,10 +4,10 @@
 # configured below, these needs to be adapted to the system.
 
 #list of c files in this project
-SOURCES=first_try.c 
+SOURCES=try.c 
 
 #name of the executable file
-EXECUTABLE=tirst_try
+EXECUTABLE=try
 
 # Path to the official kilolib, used for real bots only
 # Set it here, or as an environment variable in the shell:
