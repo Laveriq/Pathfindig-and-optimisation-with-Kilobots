@@ -17,6 +17,7 @@ typedef enum {
     KILOBOT_TOOCLOSE,
     KILOBOT_NORMAL,
     KILOBOT_WIDE,
+    KILOBOT_STOPPED, 
 } kilobot_state_t;
 
 // declare variables
