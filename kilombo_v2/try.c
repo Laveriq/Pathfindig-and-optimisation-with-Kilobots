@@ -333,7 +333,7 @@ void loop (){
     //befolge Funktion Search (Randomwalk und Distanzermittlung[find_nearest_N_dist] und bei niedrigster Distanz dann gehe zu Funktion Beacon -> werde zum Beacon und bleibe stehen
   }
 }
-setup_message;
+setup_message();
 
 }
 
@@ -360,18 +360,25 @@ char *cb_botinfo(void)
 }
 #endif
 
-#ifdef DEBUG
-  debug_init();
-#endif
 
-int main() {
+
+int main(void) {
+  
     kilo_init(); //ハードウェアでkilobotを動かすときに使用する
+    
+    #ifdef DEBUG
+      debug_init();
+    #endif  
+
+    SET_CALLBACK(botinfo, cb_botinfo);
+
+    RB_init();
     kilo_message_rx = rxbuffer_push; 
     kilo_message_tx = message_tx;//メッセージを受信したときに実行されるCallBack関数
 
 	// カーソルでフォーカスしているロボット(bot)の情報をシミュレーターに表示させる
 	// manual.mdの75行目
-    SET_CALLBACK(botinfo, cb_botinfo);
+    
   //  SET_CALLBACK(reset, setup)
     
     // bot 0 is stationary and transmits messages. Other bots orbit around it.
