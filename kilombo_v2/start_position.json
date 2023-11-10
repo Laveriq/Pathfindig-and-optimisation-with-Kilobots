@@ -1,0 +1,68 @@
+{
+  "bot_states": [
+    {
+      "ID": 0,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -201.77407836914062,
+      "y_position": -59.559818267822266
+    },
+    {
+      "ID": 100,
+      "direction": 3.0,
+      "state": {},
+      "x_position": 208.0,
+      "y_position": -83.0
+    },
+    {
+      "ID": 1,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -175.03294372558594,
+      "y_position": -94.80950927734375
+    },
+    {
+      "ID": 2,
+      "direction": 4.5,
+      "state": {},
+      "x_position": -190.16598510742188,
+      "y_position": 5.1051273345947266
+    },
+    {
+      "ID": 3,
+      "direction": 4.5,
+      "state": {},
+      "x_position": -137.97151184082031,
+      "y_position": -29.186283111572266
+    },
+    {
+      "ID": 4,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -177.40316772460938,
+      "y_position": -30.630764007568359
+    },
+    {
+      "ID": 5,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -132.73330688476562,
+      "y_position": -104.65511322021484
+    },
+    {
+      "ID": 6,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -154.43009948730469,
+      "y_position": -66.366653442382812
+    },
+    {
+      "ID": 7,
+      "direction": 1.5,
+      "state": {},
+      "x_position": -239.94097900390625,
+      "y_position": -62.537811279296875
+    }
+  ],
+  "ticks": 422
+}
