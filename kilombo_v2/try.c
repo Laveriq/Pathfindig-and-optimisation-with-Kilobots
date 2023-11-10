@@ -1,5 +1,10 @@
-/* The planet orbit demonstration from the kilobotics-labs
- * https://www.kilobotics.com/labs#lab4-orbit
+/* This Algorithm is aiming to provide a scenario where the Kilobots start at a home point to search a Food Spot. 
+If they found on a special Walker will go from the Home to the Foodspot and back.
+
+Please use "make #" and then "./try -b start_position.json" 
+
+
+currently not working
  *
  * Lightly modified to work in the simulator, in particular:
  * - mydata->variable for global variables
