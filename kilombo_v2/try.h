@@ -60,11 +60,11 @@ typedef struct{
 typedef struct {
   kilobot_state_t kilobot_state; // self declare
   uint8_t cur_distance;
-  uint8_t cur_dist;
   uint8_t new_message;
   distance_measurement_t dist; // kilolib.h
 
   message_t transmit_msg; // kilolib.h
+  uint8_t new_message;
   received_message_t RXBuffer[RB_SIZE];
   uint8_t RXHead, RXTail; 
   int N_Neighbors;
@@ -119,12 +119,3 @@ extern uint8_t NGenes;
       { mydata->RXHead = (mydata->RXHead+1)%RB_SIZE;	\
 	printf("Full.\n"); }				\
   }
-
-
-
-
-/* Code Idears 
-
-void checknaehe () {
-  if 
-}*/ 

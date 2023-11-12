@@ -1,10 +1,5 @@
-/* This Algorithm is aiming to provide a scenario where the Kilobots start at a home point to search a Food Spot. 
-If they found on a special Walker will go from the Home to the Foodspot and back.
-
-Please use "make #" and then "./try -b start_position.json" 
-
-
-currently not working
+/* The planet orbit demonstration from the kilobotics-labs
+ * https://www.kilobotics.com/labs#lab4-orbit
  *
  * Lightly modified to work in the simulator, in particular:
  * - mydata->variable for global variables
@@ -35,6 +30,7 @@ static const uint8_t TOOCLOSE_DISTANCE = 40; // 40 mm
 static const uint8_t DESIRED_DISTANCE = 60; // 60 mm
 static const uint8_t WIDE_DISTANCE = 90; // 90 mm
 */
+static const uint8_t WIDE_DISTANCE = 80; // 80 mm
 
 ////////////////////////////    RXbuffer    /////////////////////////////////////////////
 
@@ -50,95 +46,29 @@ void rxbuffer_push(message_t *msg, distance_measurement_t *dist) {
 
 ////////////////////////////    MOTION_KB STEUERUNG    /////////////////////////////////////////////
 
-void smooth_set_motors(uint8_t ccw, uint8_t cw)
-  {
-  // OCR2A = ccw;  OCR2B = cw;  //spin motor clockwise or counter clockwise 
-  //spin up means     set_motors(255, 255);
-      //              delay(15); -> maximum speed for both motors to bypass static friction. (Haftreibung)
-  #ifdef KILOBOT 
-    uint8_t l = 0, r = 0;
-    if (ccw && !OCR2A) // we want left motor on, and it's off
-      l = 0xff;
-    if (cw && !OCR2B)  // we want right motor on, and it's off
-      r = 0xff;
-    if (l || r)        // at least one motor needs spin-up
-      {
-        set_motors(l, r);
-        delay(15);
-      }
-  #endif
-    // spin-up is done, now we set the real value
-    set_motors(ccw, cw); //spin motor counter clockwise (ccw) or clockwise (cw)
-  }
 
 
   void set_motion(motion_t new_motion) //switch bei motion 
   {
     switch(new_motion) {
     case STOP:
-      smooth_set_motors(0,0);
+      set_motors(0,0);
       break;
     case FORWARD:
-      smooth_set_motors(kilo_straight_left, kilo_straight_right);
+      set_motors(kilo_straight_left, kilo_straight_right);
       break;
     case LEFT:
-      smooth_set_motors(kilo_turn_left, 0); 
+      set_motors(kilo_turn_left, 0); 
       break;
     case RIGHT:
-      smooth_set_motors(0, kilo_turn_right); 
+      set_motors(0, kilo_turn_right); 
       break;
     }
   }
 ////////////////////////////    BOTTYPE   /////////////////////////////////////////////     
 
-////////////////////////////    RANDOMWALK    ///////////////////////////////////////////// 
-  void randomwalk()
-{            
-            // Generate an 8-bit random number (between 0 and 2^8 - 1 = 255).
-            int random_number = rand_hard();
-            
-            // Compute the remainder of random_number when divided by 4.
-            // This gives a new random number in the set {0, 1, 2, 3}.
-            int random_direction = (random_number % 4);
-            
-            // There is a 50% chance of random_direction being 0 OR 1, in which
-            // case set the LED green and move forward.
-            if ((random_direction == 0) || (random_direction == 1))
-            {
-                set_color(RGB(0, 1, 0));
-                set_motion(FORWARD);
-            }
-            // There is a 25% chance of random_direction being 2, in which case
-            // set the LED red and move left.
-            else if (random_direction == 2)
-            {
-                set_color(RGB(1, 0, 0));
-                set_motion(LEFT);
-            }
-            // There is a 25% chance of random_direction being 3, in which case
-            // set the LED blue and move right.
-            else if (random_direction == 3)
-            {
-                set_color(RGB(0, 0, 1));
-                set_motion(RIGHT);
-            }
-      
 
- }
-// Randomwalk till beacon 
 
-void walk_till_beacon()
-{ 
-  // int8_t dist_b = neighbors.dist;
-  if (estimate_distance < 80) {
-    randomwalk();
-  }
-  else {
-    set_motion(STOP);
-    mydata->bot_type = BEACON_HOME; 
-
-  }
-}
 ////////////////////////////    EDGE    /////////////////////////////////////////////
 
 uint8_t find_nearest_N_dist()
@@ -180,7 +110,7 @@ void setup_message(void)
   mydata->transmit_msg.data[0] = kilo_uid;     // 0 low  ID
   mydata->transmit_msg.data[1] = mydata->N_Neighbors; // 1 number of neighbors
   mydata->transmit_msg.data[2] = mydata->bot_type; // 2 bottype (FOOD/HOME/...)
-//  mydata->transmit_msg.data[3] = mydata->dist; // 3 numer of dist 
+  mydata->transmit_msg.data[3] = find_nearest_N_dist(); // 3 numer of dist 
 
   mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
   mydata->message_lock = 0;
@@ -193,38 +123,6 @@ message_t *message_tx()
   return &mydata->transmit_msg;
 }
 
-////////////////////////////    SETUP    /////////////////////////////////////////////
-void setup ()
-{
-rand_seed(kilo_uid);
-if (kilo_uid == 0)  //HOME_BOT
-  {
-    mydata->bot_type = HOME_0; //HOME ohne verbindung zu Food location
-    set_color(RGB(3,0,0)); //rot
-  }
-  else if (kilo_uid == 100) //FOOD_BOT
-  {
-    mydata->bot_type = FOOD;
-    set_color(RGB(3,1,0)); //orange 
-  }
-  else if (kilo_uid == 2)
-  {
-     mydata->bot_type = WALKER;
-    set_color(RGB(0,3,3)); //Türkis 
-  }
-  else 
-  {
-    mydata->bot_type = SEARCHER;
-    set_color(RGB(0,3,0)); //Grün
-    mydata->detect_home = 1; //BOTS müssen in nähe von Home starten 
-  }  
- 
-set_motion(STOP); 
-mydata->N_Neighbors = 0; 
-mydata->message_lock = 0;
-setup_message();
-  
-}
 
 
 ////////////////////////////    Receive_Inputs    /////////////////////////////////////////////
@@ -260,12 +158,15 @@ void process_message()
   mydata->neighbors[i].dist = d; // 3 numer of dist
     //nachricht durchreichen 
 }
+
 void receive_inputs() //wird im loop aufgerufen
 {
   while (!RB_empty())
   {
+    mydata->new_message = 0;
     process_message();  //
     RB_popfront();
+    
   }
   purgeNeighbors();
 }
@@ -294,31 +195,88 @@ void purgeNeighbors(void)
 }
 
 
+void set_bot_type(int type){
+  mydata->bot_type =type;
+}
+
+int get_bot_type(void){
+  return mydata->bot_type;
+}
+
+////////////////////////////    SETUP    /////////////////////////////////////////////
+void setup ()
+{
+  set_motion(RIGHT); 
+  mydata->cur_distance = 0;
+  mydata->new_message = 0;
+rand_seed(kilo_uid);
+if (kilo_uid == 0)  //HOME_BOT
+  {
+    set_bot_type(HOME_0); //HOME ohne verbindung zu Food location
+    set_color(RGB(3,0,0)); //rot
+  }
+  else if (kilo_uid == 1) //FOOD_BOT
+  {
+    set_bot_type(FOOD);
+    set_color(RGB(3,1,0)); //orange 
+  }
+  else if (kilo_uid == 2)
+  {
+    set_bot_type(WALKER);
+    set_color(RGB(0,3,3)); //Türkis 
+  }
+  else if (kilo_uid > 2)
+  {
+    set_bot_type(SEARCHER);
+    set_color(RGB(0,3,0)); //Grün
+    mydata->detect_home = 1; //BOTS müssen in nähe von Home starten 
+  }  
+ 
+
+mydata->N_Neighbors = 0; 
+mydata->message_lock = 0;
+setup_message();
+  
+}
 
 ////////////////////////////    LOOP    /////////////////////////////////////////////
 void loop (){
   receive_inputs();
   int8_t i;
   for (i = mydata->N_Neighbors - 1; i >= 0; i--)
-  if (mydata->bot_type == FOOD)
-   {}
-  else if(mydata->bot_type == HOME_0){ //HOME KB ohne Food verbindung
-    if (mydata->neighbors[i].n_bot_type == BEACON_FOOD){ 
-        mydata->bot_type = HOME_1;  //HOME KB mit Food Verbindung
+
+  if (mydata->new_message) {// messageを受信するまで0なのでmessageを受信したときと解釈ができる
+        mydata->new_message = 0;
+        mydata->cur_distance = estimate_distance(&mydata->dist);//uint8型に変換してる
+
+	//メッセージを一度でも受け取ると下記のif文には入らない
+    } else if (mydata->cur_distance == 0) // skip state machine if no distance measurement available
+        return;
+
+
+
+  if (get_bot_type() == FOOD)
+   return;
+  else if(get_bot_type() == HOME_0){ //HOME KB ohne Food verbindung
+    if (mydata->neighbors[i].n_bot_type == BEACON_FOOD){ //WENN Neighbor BOTTYPE = FOOD then set HOME_1
+        set_bot_type(HOME_1);  //HOME KB mit Food Verbindung
     }
+    
   
-  else if(mydata->bot_type == BEACON_HOME) { //Beacon hat verbindung zum HOME
+  else if(get_bot_type == BEACON_HOME) { //Beacon hat verbindung zum HOME
     set_color(RGB(3,0,3));
     set_motion(STOP);
     if (mydata->neighbors[i].n_bot_type == BEACON_FOOD){
-      mydata->bot_type = BEACON_FOOD;
+      set_bot_type(FOOD);
     }
     else {}}
-  else if (mydata->bot_type == BEACON_FOOD){//Beacon hat verbindung zu FOOD
+    
+
+  else if (get_bot_type == BEACON_FOOD){//Beacon hat verbindung zu FOOD
     set_color(RGB(3,3,0));
     set_motion(STOP);
   }
-  else if (mydata->bot_type == WALKER){
+  else if (get_bot_type == WALKER){
     if (mydata->neighbors[i].n_bot_type == HOME_1){
 
       if (mydata->neighbors[i].n_bot_type == FOOD) {
@@ -329,29 +287,92 @@ void loop (){
         edge_follow(); 
       }
     }
+  return;
   }
-  else if (mydata->bot_type == SEARCHER){
+  else if (get_bot_type == SEARCHER){
 
     
-    walk_till_beacon;
+    walk();
     //Wenn Bot_type Food gefunden wurde dann bleibe stehen und werde zu beacon  (Beacon Funktion) und sende Nachricht Food_found = 1 zu nächstem Beacon
     //befolge Funktion Search (Randomwalk und Distanzermittlung[find_nearest_N_dist] und bei niedrigster Distanz dann gehe zu Funktion Beacon -> werde zum Beacon und bleibe stehen
   }
+  return;
 }
 setup_message();
 
 }
+////////////////////////////   Just WALK   ///////////////////////////////////////////// 
 
+void walk()
+{
+  set_motion(FORWARD);
+
+}
+
+
+
+////////////////////////////    RANDOMWALK_till_beacon    ///////////////////////////////////////////// 
+
+void walk_till_beacon()
+{ 
+  // int8_t dist_b = neighbors.dist;
+  if (find_nearest_N_dist() < WIDE_DISTANCE) {
+    set_color(RGB(3,3,3));
+    randomwalk();
+  }
+  else {
+    set_motion(STOP);
+    set_bot_type(BEACON_HOME); 
+
+  }
+}
+////////////////////////////    RANDOMWALK    ///////////////////////////////////////////// 
+  void randomwalk()
+{            
+            // Generate an 8-bit random number (between 0 and 2^8 - 1 = 255).
+            int random_number = rand_hard();
+            
+            // Compute the remainder of random_number when divided by 4.
+            // This gives a new random number in the set {0, 1, 2, 3}.
+            int random_direction = (random_number % 4);
+            
+            // There is a 50% chance of random_direction being 0 OR 1, in which
+            // case set the LED green and move forward.
+            if ((random_direction == 0) || (random_direction == 1))
+            {
+                set_color(RGB(0, 1, 0));
+                set_motion(FORWARD);
+            }
+            // There is a 25% chance of random_direction being 2, in which case
+            // set the LED red and move left.
+            else if (random_direction == 2)
+            {
+                set_color(RGB(1, 0, 0));
+                set_motion(LEFT);
+            }
+            // There is a 25% chance of random_direction being 3, in which case
+            // set the LED blue and move right.
+            else if (random_direction == 3)
+            {
+                set_color(RGB(0, 0, 1));
+                set_motion(RIGHT);
+            }
+      
+
+ }
 
 
 #ifdef SIMULATOR // シミュレータ上に情報を表示させるときに使用する
 /* provide a text string for the simulator status bar about this bot */
 static char botinfo_buffer[10000];
 char *cb_botinfo(void)
-{
+{   
+  int8_t i;
+  for (i = mydata->N_Neighbors - 1; i >= 0; i--);
   char *p = botinfo_buffer;
-  p += sprintf (p, "ID: %d, Distanz: %d, Anzahl Nachbarn: %d \n", kilo_uid, mydata->dist, mydata->N_Neighbors);
-  if (mydata->kilobot_state == KILOBOT_NORMAL)
+  p += sprintf (p, "ID: %d, Distanz: %d, Anzahl Nachbarn: %d,\n Bot_type: %d Nachbarbot_type: %d \n Distance(const): ", 
+  kilo_uid, mydata->dist, mydata->N_Neighbors, mydata->bot_type, mydata->neighbors[i].n_bot_type), mydata->cur_distance;
+ /* if (mydata->kilobot_state == KILOBOT_NORMAL)
     p += sprintf (p, "Distanz: KILOBOT_NORMAL\n");
   if (mydata->kilobot_state == KILOBOT_TOOCLOSE)
     p += sprintf (p, "State: KILOBOT_TOOCLOSE\n");
@@ -360,7 +381,7 @@ char *cb_botinfo(void)
   if (mydata->kilobot_state == KILOBOT_STOPPED)
     p += sprintf (p, "State: KILOBOT_STOPPED\n");
   p += sprintf (p, "Distance: %d ", mydata->cur_distance );
-  
+*/
   return botinfo_buffer;
 }
 #endif
@@ -370,7 +391,7 @@ char *cb_botinfo(void)
 int main(void) {
   
     kilo_init(); //ハードウェアでkilobotを動かすときに使用する
-    
+
     #ifdef DEBUG
       debug_init();
     #endif  
